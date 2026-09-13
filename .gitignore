@@ -1,0 +1,19 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+
+# PyInstaller
+build/
+dist/
+*.exe
+
+# Virtual environments
+.venv/
+venv/
+
+# Personal Vault Data (NEVER COMMIT THESE)
+vault.salt
+vault.json
+*.vault
+*.db
+.env
