@@ -3,7 +3,7 @@
 A modern, secure, and portable password manager built with Python.
 
 ## Features
-- **Industry-Grade Security**: Uses AES-128 (Fernet) encryption and PBKDF2 key derivation.
+- **Industry-Grade Security**: Uses AES-128 (Fernet) encryption and 600,000 PBKDF2 iteration key derivation.
 - **Modern UI**: Built with CustomTkinter for a sleek, responsive dark-mode interface.
 - **Zero Knowledge**: Your master password is never stored; only you can unlock your vault.
 - **Portable**: Your vault and encryption salt are stored in a single JSON file.
