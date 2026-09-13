@@ -1,4 +1,4 @@
-# BNDGG Vault Pro 🛡️
+# BNDGG Vault 🛡️
 
 A modern, secure, and portable password manager built with Python.
 
