@@ -34,7 +34,7 @@ OLD_SALT_FILE = os.path.join(DATA_DIR, "vault.salt")
 
 # --- CRYPTO LOGIC ---
 def derive_key(master_password: str, salt: bytes) -> bytes:
-    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=100000)
+    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=600000)
     return base64.urlsafe_b64encode(kdf.derive(master_password.encode()))
 
 def encrypt_password(key: bytes, password: str) -> str:
