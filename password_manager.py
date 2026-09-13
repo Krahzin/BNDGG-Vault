@@ -50,7 +50,9 @@ def load_vault_data():
             data = json.load(f)
             if "entries" not in data: return {"salt": None, "canary": None, "entries": data}
             return data
-    except: return {"salt": None, "canary": None, "entries": {}}
+    except Exception as e:
+        print(f"Error loading vault: {e}")
+        return {"salt": None, "canary": None, "entries": {}}
 
 def save_vault_data(data):
     with open(DATA_FILE, "w") as f: json.dump(data, f, indent=2)
@@ -70,7 +72,7 @@ class EditDialog(ctk.CTkToplevel):
         icon_path = get_icon_path()
         if os.path.exists(icon_path):
             try: self.after(200, lambda: self.iconbitmap(icon_path))
-            except: pass
+            except Exception as e: print(f"Icon error: {e}")
 
         ctk.CTkLabel(self, text="Edit Entry", font=ctk.CTkFont(size=20, weight="bold")).grid(row=0, column=0, pady=(20, 10))
         ctk.CTkLabel(self, text="Service Name:", font=ctk.CTkFont(size=12)).grid(row=1, column=0, padx=40, sticky="w")
@@ -93,7 +95,22 @@ class App(ctk.CTk):
         super().__init__()
         self.title("BNDGG Vault Pro")
         self.geometry("1000x800"); self.minsize(800, 600)
-        ctk.set_appearance_mode("dark"); ctk.set_default_color_theme("blue")
+        
+        # --- CONFIG LOADING ---
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "r") as f:
+                    config = json.load(f)
+                    mode = "dark" if config.get("dark_mode", True) else "light"
+                    ctk.set_appearance_mode(mode)
+            except Exception as e:
+                print(f"Config error: {e}")
+                ctk.set_appearance_mode("dark")
+        else:
+            ctk.set_appearance_mode("dark")
+            
+        ctk.set_default_color_theme("blue")
         
         # --- ICON LOADING ---
         icon_path = get_icon_path()
@@ -101,8 +118,8 @@ class App(ctk.CTk):
             try:
                 # after(200) helps CustomTkinter override the default icon on Windows
                 self.after(200, lambda: self.iconbitmap(icon_path))
-            except:
-                pass
+            except Exception as e:
+                print(f"Icon error: {e}")
 
         self.key = None
         self.vault_data = {"salt": None, "canary": None, "entries": {}}
@@ -191,7 +208,9 @@ class App(ctk.CTk):
                 decrypt_password(self.key, self.vault_data["entries"][first]["encrypted"])
             if not self.vault_data["canary"]: self.vault_data["canary"] = encrypt_password(self.key, "verified"); save_vault_data(self.vault_data)
             self.set_controls_state("normal"); self.refresh_list(); self.unlock_label.configure(text="Status: Unlocked", text_color="#47d147"); self.master_entry.delete(0, 'end'); self.update_status("Vault Unlocked")
-        except: messagebox.showerror("Security", "Incorrect Master Password")
+        except Exception as e:
+            print(f"Unlock error: {e}")
+            messagebox.showerror("Security", "Incorrect Master Password")
 
     def generate(self):
         chars = string.ascii_letters + string.digits + "!@#$%^&*"
@@ -201,6 +220,13 @@ class App(ctk.CTk):
     def save_password(self):
         svc, pw = self.svc_input.get().strip(), self.pw_input.get()
         if not svc or not pw: return
+        
+        # --- NEW OVERWRITE CHECK ---
+        if svc in self.vault_data["entries"]:
+            if not messagebox.askyesno("Overwrite", f"'{svc}' already exists. Overwrite?"):
+                return
+        # ---------------------------
+
         self.vault_data["entries"][svc] = {"encrypted": encrypt_password(self.key, pw), "created": datetime.now().isoformat()}
         save_vault_data(self.vault_data); self.refresh_list(); self.svc_input.delete(0, 'end'); self.pw_input.delete(0, 'end'); self.update_status(f"Added '{svc}'")
 
@@ -212,7 +238,9 @@ class App(ctk.CTk):
             dec = decrypt_password(self.key, self.vault_data["entries"][svc]["encrypted"])
             self.clipboard_clear(); self.clipboard_append(dec); self.update_status(f"Copied {svc} (30s timer)")
             threading.Thread(target=self.clear_clip_timer, args=(dec,), daemon=True).start()
-        except: messagebox.showerror("Error", "Could not decrypt")
+        except Exception as e:
+            print(f"Retrieve error: {e}")
+            messagebox.showerror("Error", "Could not decrypt")
 
     def open_edit_dialog(self):
         try:
@@ -221,9 +249,16 @@ class App(ctk.CTk):
             svc = self.listbox.get(sel[0])
             dec = decrypt_password(self.key, self.vault_data["entries"][svc]["encrypted"])
             EditDialog(self, svc, dec, self.on_save_edit)
-        except: pass
+        except Exception as e:
+            print(f"Edit dialog error: {e}")
 
     def on_save_edit(self, old, new, pw):
+        # --- NEW OVERWRITE CHECK ---
+        if new in self.vault_data["entries"] and old != new:
+            if not messagebox.askyesno("Overwrite", f"'{new}' already exists. Overwrite?"):
+                return
+        # ---------------------------
+
         if old != new: del self.vault_data["entries"][old]
         self.vault_data["entries"][new] = {"encrypted": encrypt_password(self.key, pw), "created": datetime.now().isoformat()}
         save_vault_data(self.vault_data); self.refresh_list(); self.update_status(f"Updated '{new}'")
@@ -234,7 +269,8 @@ class App(ctk.CTk):
     def root_clear_clip(self, p):
         try:
             if self.clipboard_get() == p: self.clipboard_clear(); self.update_status("Clipboard cleared")
-        except: pass
+        except Exception as e:
+            print(f"Clipboard clear error: {e}")
 
     def refresh_list(self):
         self.listbox.delete(0, 'end')
@@ -252,7 +288,8 @@ class App(ctk.CTk):
             if not sel: return
             svc = self.listbox.get(sel[0])
             if messagebox.askyesno("Confirm Delete", f"Delete '{svc}'?"): del self.vault_data["entries"][svc]; save_vault_data(self.vault_data); self.refresh_list(); self.update_status(f"Deleted '{svc}'")
-        except: pass
+        except Exception as e:
+            print(f"Delete error: {e}")
 
     def export_vault(self):
         if not self.key: return
@@ -268,7 +305,9 @@ class App(ctk.CTk):
             with open(path, "r") as f: data = json.load(f)
             if "entries" not in data or "salt" not in data: raise ValueError()
             if messagebox.askyesno("Confirm", "Overwrite current vault?"): self.vault_data = data; save_vault_data(self.vault_data); messagebox.showinfo("Success", "Vault imported. Please unlock."); self.set_controls_state("disabled"); self.refresh_list()
-        except: messagebox.showerror("Error", "Invalid vault file")
+        except Exception as e:
+            print(f"Import error: {e}")
+            messagebox.showerror("Error", "Invalid vault file")
 
     def reset_vault_prompt(self):
         if messagebox.askyesno("RESET VAULT", "WARNING: This will PERMANENTLY DELETE all passwords in this vault.\n\nAre you sure you want to proceed?"):
