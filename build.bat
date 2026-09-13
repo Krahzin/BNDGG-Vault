@@ -1,0 +1,1 @@
+python -m PyInstaller --noconsole --onefile --add-data "bndgg.ico;." --icon "bndgg.ico" password_manager.py
