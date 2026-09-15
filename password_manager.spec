@@ -1,20 +1,29 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+block_cipher = None
 
 a = Analysis(
     ['password_manager.py'],
     pathex=[],
     binaries=[],
     datas=[('bndgg.ico', '.')],
-    hiddenimports=[],
+    hiddenimports=[
+        'argon2',
+        'argon2.low_level',
+        '_argon2_cffi_bindings',
+        'cryptography',
+        'cryptography.fernet',
+        'cryptography.hazmat.backends.openssl',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['matplotlib', 'numpy', 'PIL', 'pandas'],
     noarchive=False,
     optimize=0,
 )
-pyz = PYZ(a.pure)
+
+pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 exe = EXE(
     pyz,
@@ -22,7 +31,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='password_manager',
+    name='BNDGG-Vault',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
