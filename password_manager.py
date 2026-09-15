@@ -24,7 +24,7 @@ from ui_dialogs import EditDialog
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
-        self.title("BNDGG Vault Pro")
+        self.title("BNDGG Vault")
         self.geometry("1000x850")
         self.minsize(800, 700)
         ctk.set_appearance_mode("dark")
