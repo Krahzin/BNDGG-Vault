@@ -59,8 +59,11 @@ class UiSmokeTest(unittest.TestCase):
 
         window._set_vault(vault)
         window.stack.setCurrentWidget(window.workspace)
-        window.vault_view.reload()
+        # Regression: existing entries must be visible immediately on unlock,
+        # without any search/tag/new-entry signal calling reload() for us.
         self.assertEqual(window.vault_view.table.rowCount(), 2)
+        self.assertTrue(window.vault_view.empty.isHidden())
+        self.assertEqual(window.vault_view.count_label.text(), "2 entries")
 
         entry = next(iter(vault.entries.values()))
         window.vault_view._show(entry)
