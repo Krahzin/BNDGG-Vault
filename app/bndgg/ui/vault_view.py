@@ -137,6 +137,10 @@ class VaultView(QWidget):
         QShortcut(QKeySequence("Ctrl+C"), self.table, self.copy_password)
         QShortcut(QKeySequence("Delete"), self.table, self.delete_entry)
 
+        # Populate immediately — otherwise the table stays blank until some
+        # signal (search, tag change, or a new entry) happens to call reload().
+        self.reload()
+
     # -- detail panel ------------------------------------------------------
     def _build_detail(self) -> QWidget:
         panel = QFrame()
