@@ -2,18 +2,25 @@
 __pycache__/
 *.py[cod]
 
+# Virtual environment
+.venv/
+venv/
+
 # PyInstaller
 build/
 dist/
 *.exe
 
-# Virtual environments
-.venv/
-venv/
-
-# Personal Vault Data (NEVER COMMIT THESE)
-vault.salt
+# Personal vault data — never commit
+vaults/
 vault.json
+vault.json.bak
+vault.json.tmp
 *.vault
 *.db
 .env
+
+# Local exports and logs
+bndgg-backup.json
+bndgg-export.csv
+app.log
